@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laya AI Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f5fa;
+      margin: 0;
+      padding: 30px 12px;
+    }
+
+    .chat {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px #0001;
+    }
+
+    h2 { text-align: center; }
+
+    #messages {
+      height: 350px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .message { margin: 12px 0; }
+    .user { color: #155eef; }
+    .bot { color: #16804a; }
+
+    .controls { display: flex; gap: 8px; }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 6px;
+      background: #2457d6;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <h2>Laya AI Chatbot</h2>
+    <p>Ask me about greetings, technical support, or general help.</p>
+
+    <div id="messages" aria-live="polite">
+      <div class="message bot">
+        Bot: Hello! How can I help you today?
+      </div>
+    </div>
+
+    <form id="chatForm" class="controls">
+      <input id="question" placeholder="Type your question..."
+             autocomplete="off" required>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("question");
+    const messages = document.getElementById("messages");
+
+    function addMessage(sender, text, className) {
+      const div = document.createElement("div");
+      div.className = "message " + className;
+      div.textContent = sender + ": " + text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const question = input.value.trim();
+      if (!question) return;
+
+      addMessage("You", question, "user");
+      input.value = "";
+      input.disabled = true;
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Request failed");
+        }
+
+        addMessage("Bot", data.reply, "bot");
+      } catch (error) {
+        addMessage("Bot",
+          "Sorry, I could not process your request. Please try again.",
+          "bot");
+      } finally {
+        input.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>
